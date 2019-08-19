@@ -10,7 +10,7 @@ function App() {
         <img src={logo} className="App-logo" alt="logo" />
         <h1>Homer's Odyssey</h1>
       </header>
-      <SignUp email="xa@gmail.com" />
+      <SignUp />
     </div>
   );
 }
