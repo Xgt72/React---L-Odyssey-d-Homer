@@ -6,9 +6,9 @@ router.post("/signup", (req, res, next) => {
     const user = req.body;
     connection.query("INSERT INTO users SET ?", user, (err, results) => {
         if (err) {
-            res.status(500).send("Error while backing up the user");
+            res.status(500).json({flash: err.message});
         } else {
-            res.json(results);
+            res.status(200).json({flash: "User has been signed up!"});
         }
     });
 });

@@ -8,7 +8,8 @@ class SignUp extends Component {
             password: "",
             passwordBis: "",
             firstname: "",
-            lastname: ""
+            lastname: "",
+            flash: ""
         };
         this.updateEmail = this.updateEmail.bind(this);
         this.updatePassword = this.updatePassword.bind(this);
@@ -50,7 +51,24 @@ class SignUp extends Component {
 
     submitForm = (event) => {
         event.preventDefault();
-        console.log(this.state);
+        if (this.state.password !== this.state.passwordBis) {
+            alert("Your password and the password confirmed are not identical !!");
+        } else {
+            const { passwordBis, flash, ...user } = this.state;
+            fetch("/auth/signup",
+                {
+                    method: "POST",
+                    headers: new Headers({
+                        "Content-Type": "application/json"
+                    }),
+                    body: JSON.stringify(user),
+                })
+                .then(res => res.json())
+                .then(
+                    res => this.setState({ "flash": res.flash }),
+                    err => this.setState({ "flash": err.flash })
+                );
+        }
     };
 
     render() {
@@ -104,7 +122,7 @@ class SignUp extends Component {
                 />
                 <input className="submitButton" type="submit" value="submit" />
             </form>
-        )
+        );
     };
 }
 
