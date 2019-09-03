@@ -26,7 +26,7 @@ router.post("/signin", (req, res) => {
             return res.status(400).json({message: info.message});
         }
         const token = jwt.sign(user, 'homerS', { expiresIn: 60 * 5 });
-        return res.json({user, token});
+        return res.json({user, token, message: info.message});
     })(req, res);
 });
 

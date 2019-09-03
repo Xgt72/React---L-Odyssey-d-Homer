@@ -1,7 +1,8 @@
 import React, { Component } from "react";
 import { List, ListItem, ListItemText } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
-import { Link, Redirect } from "react-router-dom";
+import { Redirect } from "react-router-dom";
+import { connect } from "react-redux";
 
 class Profile extends Component {
     constructor(props) {
@@ -16,7 +17,32 @@ class Profile extends Component {
         };
     }
 
+    componentWillMount() {
+        fetch("/profile",
+            {
+                headers: {
+                    "Authorization": 'Bearer ' + this.props.token,
+                }
+            })
+            .then(res => {
+                if (res.ok) {
+                    return res.json();
+                } else {
+                    throw new Error(res.statusText);
+                }
+            })
+            .then(res => this.setState({ profile: res }))
+            .catch();
+    }
+
+
+
     logout = () => {
+        this.props.dispatch(
+            {
+                type: "SIGNOUT"
+            }
+        );
         this.setState({ redirect: true });
     }
 
@@ -53,4 +79,8 @@ class Profile extends Component {
     }
 }
 
-export default Profile;
+function mapStateToProps(state) {
+    return { token: state.auth.token };
+}
+
+export default connect(mapStateToProps)(Profile);

@@ -1,41 +1,32 @@
 import React, { Component } from "react";
-import TextField from '@material-ui/core/TextField';
+import TextField from "@material-ui/core/TextField";
 import IconButton from '@material-ui/core/IconButton';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
-import Button from '@material-ui/core/Button';
+import Button from "@material-ui/core/Button";
 import MySnackBar from "./MySnackBar";
 import Snackbar from "@material-ui/core/Snackbar";
 import { Link, Redirect } from "react-router-dom";
+import { connect } from "react-redux";
 
-class SignUp extends Component {
+class SignIn extends Component {
     constructor(props) {
-
         super(props);
         this.state = {
             email: "",
             password: "",
-            passwordBis: "",
-            firstname: "",
-            lastname: "",
             flash: "",
             showPassword: false,
-            showPasswordBis: false,
             open: false,
             messageType: "success",
             redirect: false
         };
-
         this.updateEmail = this.updateEmail.bind(this);
         this.updatePassword = this.updatePassword.bind(this);
-        this.updatePasswordBis = this.updatePasswordBis.bind(this);
-        this.updateFirstname = this.updateFirstname.bind(this);
-        this.updateLastname = this.updateLastname.bind(this);
         this.submitForm = this.submitForm.bind(this);
         this.handleClickShowPassword = this.handleClickShowPassword.bind(this);
         this.handleMouseDownPassword = this.handleMouseDownPassword.bind(this);
-        this.handleClickShowPasswordBis = this.handleClickShowPasswordBis.bind(this);
     }
 
     updateEmail = (event) => {
@@ -50,53 +41,58 @@ class SignUp extends Component {
         });
     };
 
-    updatePasswordBis = (event) => {
-        this.setState({
-            [event.target.name]: event.target.value,
-        });
-    };
-
-    updateFirstname = (event) => {
-        this.setState({
-            [event.target.name]: event.target.value,
-        });
-    };
-
-    updateLastname = (event) => {
-        this.setState({
-            [event.target.name]: event.target.value,
-        });
-    };
-
     submitForm = (event) => {
         event.preventDefault();
-        if (this.state.password !== this.state.passwordBis) {
-            alert("Your password and the password confirmed are not identical !!");
-        } else {
-            const { passwordBis, flash, showPassword, showPasswordBis, open, messageType, redirect, ...user } = this.state;
-            fetch("/auth/signup",
-                {
-                    method: "POST",
-                    headers: new Headers({
-                        "Content-Type": "application/json"
-                    }),
-                    body: JSON.stringify(user),
-                })
-                .then(res => {
-                    if (res.status !== 200) {
-                        this.setState({ messageType: "error" });
-                    } else {
-                        this.setState({ messageType: "success" });
-                        this.setState({ redirect: true });
-                    }
+        const { flash, showPassword, open, messageType, redirect, ...user } = this.state;
+        fetch("/auth/signin",
+            {
+                method: "POST",
+                headers: new Headers({
+                    "Content-Type": "application/json"
+                }),
+                body: JSON.stringify(user),
+            })
+            .then(res => {
+                if (res.ok) {
+                    this.setState({ messageType: "success" });
                     return res.json();
-                })
-                .then(res => {
-                    this.setState({ "flash": res.flash });
+                } else {
+                    if (res.status === 400) {
+                        res.json().then(res => {
+                            this.setState({ messageType: "error" });
+                            this.setState({ "flash": res.message });
+                            this.setState({ open: true });
+                        });
+                    } else {
+                        this.setState({ messageType: "error" });
+                        throw new Error(res.statusText);
+                    }
+                }
+            })
+            .then(
+                res => {
+                    this.props.dispatch(
+                        {
+                            type: "CREATE_SESSION",
+                            user: res.user,
+                            token: res.token,
+                            message: res.message
+                        }
+                    );
+                    this.setState({ "flash": res.message });
+                    this.setState({ open: true });
+                    setTimeout(() => {
+                        this.props.history.replace("/");
+                        this.setState({ redirect: true })
+                    }, 2000);
+                }
+            )
+            .catch(
+                (err) => {
+                    this.setState({ "flash": err.message });
                     this.setState({ open: true });
                 }
-                );
-        }
+            );
     };
 
     handleClickShowPassword = () => {
@@ -109,20 +105,16 @@ class SignUp extends Component {
         event.preventDefault();
     };
 
-    handleClickShowPasswordBis = () => {
-        this.setState({
-            showPasswordBis: !this.state.showPasswordBis,
-        });
-    };
-
     handleClick = () => {
         this.setState({
             open: false,
         });
     };
 
+
     render() {
         if (this.state.redirect) {
+            // return <Redirect to="/profile" />
             return <Redirect to="/" />
         } else {
             return (
@@ -163,53 +155,6 @@ class SignUp extends Component {
                             ),
                         }}
                     />
-                    <TextField
-                        id="passwordBis"
-                        label="Confirm Password"
-                        type={this.state.showPasswordBis ? "text" : "password"}
-                        name="passwordBis"
-                        onChange={this.updatePasswordBis}
-                        value={this.state.passwordBis}
-                        required
-                        margin="normal"
-                        variant="outlined"
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <IconButton
-                                        edge="end"
-                                        aria-label="toggle password visibility"
-                                        onClick={this.handleClickShowPasswordBis}
-                                        onMouseDown={this.handleMouseDownPassword}
-                                    >
-                                        {this.state.showPasswordBis ? <VisibilityOff /> : <Visibility />}
-                                    </IconButton>
-                                </InputAdornment>
-                            ),
-                        }}
-                    />
-                    <TextField
-                        id="firstname"
-                        label="Firstname"
-                        type="firstname"
-                        name="firstname"
-                        onChange={this.updateFirstname}
-                        value={this.state.firstname}
-                        required
-                        margin="normal"
-                        variant="outlined"
-                    />
-                    <TextField
-                        id="lastname"
-                        label="Lastname"
-                        type="lastname"
-                        name="lastname"
-                        onChange={this.updateLastname}
-                        value={this.state.lastname}
-                        required
-                        margin="normal"
-                        variant="outlined"
-                    />
                     <Button
                         className="submitButton"
                         variant="contained"
@@ -234,11 +179,17 @@ class SignUp extends Component {
                             message={this.state.flash}
                         />
                     </Snackbar>
-                    <Link to="/signin">SignIn</Link>
+                    <Link to="/signup">SignUp</Link>
                 </form>
             );
         }
-    };
+    }
 }
 
-export default SignUp;
+function mapStateToProps(state) {
+    return {
+        flash: state.auth.token
+    }
+}
+
+export default connect(mapStateToProps)(SignIn);

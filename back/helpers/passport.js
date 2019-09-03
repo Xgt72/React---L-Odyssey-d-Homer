@@ -17,18 +17,16 @@ passport.use(new LocalStrategy(
             if (err) {
                 return cb(err);
             } else {
-                console.log("1", results);
                 if (results[0] == undefined) {
-                    return cb(null, false, { message: 'Incorrect email or password.' });
+                    return cb(null, false, { message: 'Incorrect email.' });
                 } else {
-                    console.log("2");
                     if (bcrypt.compareSync("homer" + password, results[0].password)) {
                         const user = {
                             email: email
                         };
-                        return cb(null, user);
+                        return cb(null, user, { message: 'User sign in!' });
                     } else {
-                        return cb(null, false, { message: 'Incorrect email or password.' });
+                        return cb(null, false, { message: 'Incorrect password.' });
                     }
                 }
             }
